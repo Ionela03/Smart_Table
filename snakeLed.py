@@ -4,14 +4,13 @@ import board
 import neopixel
 import pygame
 from pygame.locals import *
+from gameOverMessage import display_game_over, display_score
 
-# Configuration for the WS2813 LED matrix
 PIXEL_X = 16  # Width of the matrix
 PIXEL_Y = 26  # Height of the matrix
 LED_BRIGHTNESS = 0.5
 
-# Set up the NeoPixel
-pixel_pin = board.D21  # Data pin
+pixel_pin = board.D21  
 num_pixels = PIXEL_X * PIXEL_Y
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=LED_BRIGHTNESS, auto_write=False, pixel_order=neopixel.GRB)
 
@@ -85,39 +84,13 @@ def draw_snake():
 
 def draw_food():
     draw_pixel(food['x'], food['y'], (255, 0, 0))
-def display_score(score):
-    # Simple digits definition assuming each digit is 5x7 pixels
-    digits = {
-        '0': [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 5), (3, 1), (3, 5), (4, 1), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)],
-        '1': [(3, 1), (3, 2), (3, 3), (3, 4), (3, 5)],
-        '2': [(1, 1), (1, 5), (2, 1), (2, 5), (3, 1), (3, 3), (3, 5), (4, 1), (4, 3), (4, 5), (5, 1), (5, 3), (5, 5)],
-        '3': [(1, 1), (1, 5), (2, 1), (2, 5), (3, 1), (3, 3), (3, 5), (4, 1), (4, 3), (4, 5), (5, 3)],
-        '4': [(1, 3), (2, 3), (3, 1), (3, 3), (3, 5), (4, 1), (4, 5), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)],
-        '5': [(1, 1), (1, 3), (1, 5), (2, 1), (2, 3), (2, 5), (3, 1), (3, 3), (3, 5), (4, 1), (4, 3), (4, 5), (5, 3)],
-        '6': [(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (2, 1), (2, 3), (2, 5), (3, 1), (3, 3), (3, 5), (4, 1), (4, 3), (4, 5), (5, 3)],
-        '7': [(1, 1), (2, 1), (3, 1), (3, 2), (3, 3), (3, 4), (3, 5)],
-        '8': [(1, 1), (1, 3), (1, 5), (2, 1), (2, 3), (2, 5), (3, 1), (3, 3), (3, 5), (4, 1), (4, 3), (4, 5), (5, 1), (5, 3), (5, 5)],
-        '9': [(1, 3), (2, 1), (2, 3), (2, 5), (3, 1), (3, 3), (3, 5), (4, 1), (4, 3), (5, 1), (5, 2), (5, 3), (5, 4), (5, 5)]
-    }
-
-    score_str = str(score)
-    x_offset = 0  # Start position for the first digit
-    x_spacing = 7  # Space between digits
-
-    for digit in score_str:
-        if digit in digits:
-            for (x, y) in digits[digit]:
-                draw_pixel(x + x_offset, y, (255, 255, 255))  # White digits on red background
-        x_offset += x_spacing  # Move to the next digit position
 
 def game_over():
-    # Fill the screen with red
-    pixels.fill((255, 0, 0))
-    
-    # Display the score
+
+    display_game_over()
+    time.sleep(2)
     display_score(score)
-    
-    pixels.show()
+
 
 def game_loop():
     global direction, last_direction, running
