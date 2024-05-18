@@ -6,128 +6,112 @@ import pygame
 from pygame.locals import *
 from gameOverMessage import display_game_over, display_score
 
-PIXEL_X = 16  # Width of the matrix
-PIXEL_Y = 26  # Height of the matrix
-LED_BRIGHTNESS = 0.5
+class SnakeGame:
+    def __init__(self, led_pin=board.D21):  # Folosește obiectul pinului direct
+        self.PIXEL_X = 16
+        self.PIXEL_Y = 26
+        self.LED_BRIGHTNESS = 0.5
+        self.pixel_pin = led_pin  # Folosește direct obiectul pinului D21
+        self.num_pixels = self.PIXEL_X * self.PIXEL_Y
+        self.pixels = neopixel.NeoPixel(self.pixel_pin, self.num_pixels, brightness=self.LED_BRIGHTNESS, auto_write=False, pixel_order=neopixel.GRB)
+        self.directions = ['up', 'down', 'left', 'right']
+        self.current_direction = 'up'
+        self.snake_coords = [{'x': self.PIXEL_X // 2, 'y': self.PIXEL_Y // 2}, {'x': self.PIXEL_X // 2, 'y': self.PIXEL_Y // 2 + 1}]
+        self.food = self.add_food()
+        self.score = 0
+        pygame.init()
+        pygame.joystick.init()
+        self.joystick = pygame.joystick.Joystick(0)
+        self.joystick.init()
 
-pixel_pin = board.D21  
-num_pixels = PIXEL_X * PIXEL_Y
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=LED_BRIGHTNESS, auto_write=False, pixel_order=neopixel.GRB)
+    def draw_pixel(self, x, y, color):
+        if 0 <= x < self.PIXEL_X and 0 <= y < self.PIXEL_Y:
+            index = x * self.PIXEL_Y + y if x % 2 == 1 else x * self.PIXEL_Y + (self.PIXEL_Y - 1 - y)
+            self.pixels[index] = color
 
-# Snake game constants
-UP = 'up'
-DOWN = 'down'
-LEFT = 'left'
-RIGHT = 'right'
-HEAD = 0  # Index of the snake's head
+    def clear_screen(self):
+        self.pixels.fill((0, 0, 0))
+        #self.pixels.show()
 
-# Initialize the snake
-snake_coords = [{'x': PIXEL_X // 2, 'y': PIXEL_Y // 2}, {'x': PIXEL_X // 2, 'y': PIXEL_Y // 2 + 1}]
-direction = UP
-last_direction = direction
-food = {'x': random.randint(0, PIXEL_X - 1), 'y': random.randint(0, PIXEL_Y - 1)}  # Initialize food
-score = 0  # Initialize score
+    def add_food(self):
+        while True:
+            new_food = {'x': random.randint(0, self.PIXEL_X - 1), 'y': random.randint(0, self.PIXEL_Y - 1)}
+            if new_food not in self.snake_coords:
+                return new_food
 
-# Initialize Pygame for the controller
-pygame.init()
-pygame.joystick.init()
-joystick = pygame.joystick.Joystick(0)
-joystick.init()
+    def update_snake(self):
+        head_x = self.snake_coords[0]['x']
+        head_y = self.snake_coords[0]['y']
+        new_head = {'x': head_x, 'y': head_y}
+        if self.current_direction == 'up':
+            new_head['y'] = (head_y - 1) % self.PIXEL_Y
+        elif self.current_direction == 'down':
+            new_head['y'] = (head_y + 1) % self.PIXEL_Y
+        elif self.current_direction == 'left':
+            new_head['x'] = (head_x - 1) % self.PIXEL_X
+        elif self.current_direction == 'right':
+            new_head['x'] = (head_x + 1) % self.PIXEL_X
 
-def draw_pixel(x, y, color):
-    if 0 <= x < PIXEL_X and 0 <= y < PIXEL_Y:
-        if x % 2 == 1:
-            pixels[x * PIXEL_Y + y] = color
+        if new_head in self.snake_coords:
+            return False  # Game over condition
+
+        self.snake_coords.insert(0, new_head)
+
+        if new_head == self.food:
+            self.score += 1
+            self.food = self.add_food()
         else:
-            pixels[x * PIXEL_Y + (PIXEL_Y - 1 - y)] = color
+            self.snake_coords.pop()
 
-def clear_screen():
-    pixels.fill((0, 0, 0))
-
-def add_food():
-    global food, score
-    while True:
-        new_food = {'x': random.randint(0, PIXEL_X - 1), 'y': random.randint(0, PIXEL_Y - 1)}
-        if new_food not in snake_coords:
-            food = new_food
-            break
-
-def update_snake():
-    global last_direction, score, running
-    head_x = snake_coords[HEAD]['x']
-    head_y = snake_coords[HEAD]['y']
-
-    if last_direction == UP:
-        new_head = {'x': head_x, 'y': (head_y - 1) % PIXEL_Y}
-    elif last_direction == DOWN:
-        new_head = {'x': head_x, 'y': (head_y + 1) % PIXEL_Y}
-    elif last_direction == LEFT:
-        new_head = {'x': (head_x - 1) % PIXEL_X, 'y': head_y}
-    elif last_direction == RIGHT:
-        new_head = {'x': (head_x + 1) % PIXEL_X, 'y': head_y}
-
-    if new_head in snake_coords:
-        running = False  # Stop the game if collision detected
-        return
-
-    snake_coords.insert(0, new_head)
+        return True
     
-    if snake_coords[HEAD] == food:
-        score += 1  # Increment score
-        add_food()  # Add new food because snake just ate it
-    else:
-        snake_coords.pop()
-
-def draw_snake():
-    for coord in snake_coords:
-        draw_pixel(coord['x'], coord['y'], (0, 255, 0))
-
-def draw_food():
-    draw_pixel(food['x'], food['y'], (255, 0, 0))
-
-def game_over():
-
-    display_game_over()
-    time.sleep(2)
-    display_score(score)
-
-
-def game_loop():
-    global direction, last_direction, running
-    running = True
-    add_food()
-    while running:
-        clear_screen()
-        update_snake()
-        draw_snake()
-        draw_food()
-        pixels.show()
-        time.sleep(0.1)
-
+    def handle_input(self):
         for event in pygame.event.get():
-            if event.type == JOYAXISMOTION:
-                if event.axis == 0:
-                    if event.value < -0.5 and last_direction != RIGHT:
-                        direction = LEFT
-                    elif event.value > 0.5 and last_direction != LEFT:
-                        direction = RIGHT
-                elif event.axis == 1:
-                    if event.value < -0.5 and last_direction != DOWN:
-                        direction = UP
-                    elif event.value > 0.5 and last_direction != UP:
-                        direction = DOWN
+            if event.type == pygame.QUIT:
+                self.running = False
+            elif event.type == pygame.JOYAXISMOTION:
+                if event.axis == 0:  # Verifică axa orizontală
+                    if event.value < -0.5:
+                        if self.current_direction != 'right':  # Previne mersul înapoi direct
+                            self.current_direction = 'left'
+                    elif event.value > 0.5:
+                        if self.current_direction != 'left':
+                            self.current_direction = 'right'
+                elif event.axis == 1:  # Verifică axa verticală
+                    if event.value < -0.5:
+                        if self.current_direction != 'down':
+                            self.current_direction = 'up'
+                    elif event.value > 0.5:
+                        if self.current_direction != 'up':
+                            self.current_direction = 'down'
 
-            elif event.type is pygame.QUIT:
-                running = False
+    def draw_snake(self):
+        for coord in self.snake_coords:
+            self.draw_pixel(coord['x'], coord['y'], (0, 255, 0))
 
-        # Only update last_direction if the new direction is not opposite to current
-        if ((last_direction == UP and direction != DOWN) or
-            (last_direction == DOWN and direction != UP) or
-            (last_direction == LEFT and direction != RIGHT) or
-            (last_direction == RIGHT and direction != LEFT)):
-            last_direction = direction
+    def draw_food(self):
+        self.draw_pixel(self.food['x'], self.food['y'], (255, 0, 0))
 
-    game_over()
+    def game_over(self):
+        display_game_over()  # Afișează mesajul de game over
+        time.sleep(2)
+        display_score(self.score)  # Afișează scorul
+        time.sleep(2)
+        self.running = False  # Oprirea jocului
 
-if __name__ == '__main__':
-    game_loop()
+    def run(self):
+        self.running = True
+        while self.running:
+            self.handle_input()
+            self.clear_screen()
+            if not self.update_snake():
+                self.game_over()
+                break  # Ieșire din bucla de joc dacă este game over
+            self.draw_snake()
+            self.draw_food()
+            self.pixels.show()
+            time.sleep(0.1)
+    
+
+# snake_game = SnakeGame()
+# result = snake_game.run()  # Începe jocul și returnează la meniu după terminare
