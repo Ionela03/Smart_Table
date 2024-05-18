@@ -298,3 +298,5 @@ def display_score(score):
                         draw_pixel(x_offset + col_index, y_offset + row_index, (0, 255, 0))
             x_offset += DIGIT_SIZE[digit][0] + 1 
     pixels.show()
+
+display_game_over()
