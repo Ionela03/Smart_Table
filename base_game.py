@@ -35,12 +35,29 @@ class BaseGame:
     def game_over(self):
         display_game_over() 
         time.sleep(2)
-    
+
+    def update_display(self):
+        self.pixels.show()
+
     @abstractmethod
     def run(self):
         #Method that should be implemented by subclasses
         pass
-    @abstractmethod
+    
     def handle_input(self):
-        #Method that should be implemented by subclasses
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            elif event.type == pygame.JOYAXISMOTION:
+                self.process_axis_motion(event)
+            elif event.type == pygame.JOYBUTTONDOWN:
+                self.process_button_down(event)
+
+    @abstractmethod
+    def process_axis_motion(self, event):
+        pass
+
+    @abstractmethod
+    def process_button_down(self, event):
         pass

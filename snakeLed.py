@@ -50,25 +50,25 @@ class SnakeGame(BaseGame):
 
         return True
     
-    def handle_input(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-            elif event.type == pygame.JOYAXISMOTION:
-                if event.axis == 0:  # Verifică axa orizontală
-                    if event.value < -0.5:
-                        if self.current_direction != 'right':  # Previne mersul înapoi direct
-                            self.current_direction = 'left'
-                    elif event.value > 0.5:
-                        if self.current_direction != 'left':
-                            self.current_direction = 'right'
-                elif event.axis == 1:  # Verifică axa verticală
-                    if event.value < -0.5:
-                        if self.current_direction != 'down':
-                            self.current_direction = 'up'
-                    elif event.value > 0.5:
-                        if self.current_direction != 'up':
-                            self.current_direction = 'down'
+    def process_axis_motion(self, event):
+        if event.axis == 0:
+            if event.value < -0.5:
+                if self.current_direction != 'right':
+                    self.current_direction = 'left'
+            elif event.value > 0.5:
+                if self.current_direction != 'left':
+                    self.current_direction = 'right'
+        elif event.axis == 1:
+            if event.value < -0.5:
+                if self.current_direction != 'down':
+                    self.current_direction = 'up'
+            elif event.value > 0.5:
+                if self.current_direction != 'up':
+                    self.current_direction = 'down'
+
+    def process_button_down(self, event):
+        # Example: handle button press differently if needed
+        pass                       
 
     def draw_snake(self):
         for coord in self.snake_coords:
@@ -96,10 +96,10 @@ class SnakeGame(BaseGame):
                 self.game_over()
                 break
             self.draw_elements()
-            self.pixels.show()
+            self.update_display()
             time.sleep(0.1)
 
     
 
-# snake_game = SnakeGame()
-# result = snake_game.run()  
+snake_game = SnakeGame()
+result = snake_game.run()  
