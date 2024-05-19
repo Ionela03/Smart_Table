@@ -13,7 +13,7 @@ class SnakeGameWithRandomObstacles(SnakeGame):
         while len(obstacles) < 5:
             x = random.randint(0, self.width - 1)
             y = random.randint(0, self.height - 1)
-            length = random.randint(3, 7)  # Ensure the length is between 2 and 6
+            length = random.randint(3, 7)  # Ensure the length is between 3 and 7
             direction = random.choice(['up', 'down', 'left', 'right'])
             temp_obstacle = []
             valid_obstacle = True
@@ -57,5 +57,5 @@ class SnakeGameWithRandomObstacles(SnakeGame):
         super().draw_elements() 
         self.draw_obstacle()  
 
-snake_game = SnakeGameWithRandomObstacles()
-result = snake_game.run() 
+# snake_game = SnakeGameWithRandomObstacles()
+# result = snake_game.run() 
