@@ -21,17 +21,7 @@ class TetrisGame(BaseGame):
         self.TEMPLATEHEIGHT=4
         self.game_board = [[None for _ in range(self.height)] for _ in range(self.width)]
         self.BLANK = None
-
-    def draw_pixel(self, x, y, color):
-        mirrored_y = self.height - 1 - y
-        if 0 <= x < self.width and 0 <= mirrored_y < self.height:
-            if x % 2 == 0:
-                index = (x * self.height) + mirrored_y
-            else:
-                index = (x * self.height) + (self.height - 1 - mirrored_y)
-            if index < self.num_pixels:
-                self.pixels[index] = color
-
+        self.current_piece=None
 
     def get_new_piece(self):
         shape = random.choice(list(self.PIECES.keys()))
@@ -109,44 +99,55 @@ class TetrisGame(BaseGame):
             for x in range(self.width ):
                 self.game_board[x][0] = self.BLANK
 
+    def handle_input(self):
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                raise SystemExit
+            elif event.type == pygame.JOYAXISMOTION:
+                self.process_axis_motion(event)
+            elif event.type == pygame.JOYBUTTONDOWN:
+                self.process_button_down(event)
+
+    def process_axis_motion(self, event):
+        if not self.current_piece:
+            return
+        if event.axis == 0:
+            if event.value < -0.5:
+                self.move_piece(self.current_piece, adjX=-1)
+            elif event.value > 0.5:
+                self.move_piece(self.current_piece, adjX=1)
+        elif event.axis == 1 and event.value > 0.5:
+            self.move_piece(self.current_piece, adjY=1)
+
+    def process_button_down(self, event):
+        if not self.current_piece:
+            return
+        if event.button == 4:
+            self.rotate_piece(self.current_piece)
+
     def run(self):
-        running = True
-        current_piece = self.get_new_piece()
+        self.running = True
+        self.current_piece = self.get_new_piece()
         last_fall_time = time.time()
-        while running:
+        while self.running:
             if time.time() - last_fall_time > 1:
-                if not self.move_piece(current_piece, adjY=1):
-                    self.add_to_board(self.game_board, current_piece)
+                if not self.move_piece(self.current_piece, adjY=1):
+                    self.add_to_board(self.game_board, self.current_piece)
                     self.remove_complete_lines()
-                    current_piece = self.get_new_piece()
-                    if current_piece is None:
+                    self.current_piece = self.get_new_piece()
+                    if self.current_piece is None:
                         self.game_over()
                         break
                 last_fall_time = time.time()
             self.clear_screen()
             self.draw_board()
-            self.draw_piece(current_piece)
+            self.draw_piece(self.current_piece)
             self.pixels.show()
-            self.handle_input(current_piece)
+            self.handle_input()
             time.sleep(0.1)
 
-    def handle_input(self, current_piece):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                raise SystemExit
-            elif event.type == JOYAXISMOTION:
-                if event.axis == 0:  # Left/right movement
-                    if event.value < -0.5:
-                        self.move_piece(current_piece, adjX=-1)
-                    elif event.value > 0.5:
-                        self.move_piece(current_piece, adjX=1)
-                elif event.axis == 1 and event.value > 0.5:  # Downward movement
-                    self.move_piece(current_piece, adjY=1)
-            elif event.type == JOYBUTTONDOWN:
-                if event.button == 4:  # Rotate piece
-                    self.rotate_piece(current_piece)
 
 
-tetris_game = TetrisGame()
-result = tetris_game.run()
+# tetris_game = TetrisGame()
+# result = tetris_game.run()
