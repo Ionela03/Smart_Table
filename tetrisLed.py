@@ -1,19 +1,12 @@
 import time
-import board as pyboard
-import neopixel
 import random
 import pygame
 from pygame.locals import *
-from gameOverMessage import display_game_over
+from base_game import BaseGame
 
-class TetrisGame:
+class TetrisGame(BaseGame):
     def __init__(self):
-        self.PIXEL_X = 16  # Width of the matrix
-        self.PIXEL_Y = 26  # Height of the matrix
-        self.LED_BRIGHTNESS = 0.5
-        self.pixel_pin = pyboard.D21
-        self.num_pixels = self.PIXEL_X * self.PIXEL_Y
-        self.pixels = neopixel.NeoPixel(self.pixel_pin, self.num_pixels, brightness=self.LED_BRIGHTNESS, auto_write=False, pixel_order=neopixel.GRB)
+        super().__init__()
         self.COLORS = [(0, 0, 255), (0, 255, 0), (255, 0, 0), (255, 255, 0), (0, 255, 255), (255, 0, 255), (255, 165, 0)]
         self.PIECES = {
             'S': [['....', '....', '..OO', '.OO.'], ['....', '..O.', '..OO', '...O']],
@@ -26,35 +19,26 @@ class TetrisGame:
         }
         self.TEMPLATEWIDTH=4
         self.TEMPLATEHEIGHT=4
-        self.game_board = [[None for _ in range(self.PIXEL_Y)] for _ in range(self.PIXEL_X)]
+        self.game_board = [[None for _ in range(self.height)] for _ in range(self.width)]
         self.BLANK = None
-        pygame.init()
-        pygame.joystick.init()
-        self.joystick = pygame.joystick.Joystick(0)
-        self.joystick.init()
 
     def draw_pixel(self, x, y, color):
-        mirrored_y = self.PIXEL_Y - 1 - y
-        if 0 <= x < self.PIXEL_X and 0 <= mirrored_y < self.PIXEL_Y:
+        mirrored_y = self.height - 1 - y
+        if 0 <= x < self.width and 0 <= mirrored_y < self.height:
             if x % 2 == 0:
-                index = (x * self.PIXEL_Y) + mirrored_y
+                index = (x * self.height) + mirrored_y
             else:
-                index = (x * self.PIXEL_Y) + (self.PIXEL_Y - 1 - mirrored_y)
+                index = (x * self.height) + (self.height - 1 - mirrored_y)
             if index < self.num_pixels:
                 self.pixels[index] = color
 
-    def clear_pixels(self):
-        self.pixels.fill((0, 0, 0))
-
-    def game_over(self):
-        display_game_over()
 
     def get_new_piece(self):
         shape = random.choice(list(self.PIECES.keys()))
         new_piece = {
             'shape': shape,
             'rotation': random.randint(0, len(self.PIECES[shape]) - 1),
-            'x': int(self.PIXEL_X  / 2 - self.TEMPLATEWIDTH / 2),
+            'x': int(self.width  / 2 - self.TEMPLATEWIDTH / 2),
             'y': 0,
             'color': random.randint(0, len(self.COLORS) - 1)
         }
@@ -75,15 +59,15 @@ class TetrisGame:
                 if self.PIECES[piece['shape']][piece['rotation']][y][x] == 'O':
                     boardX = piece['x'] + x + adjX
                     boardY = piece['y'] + y + adjY
-                    if not (0 <= boardX < self.PIXEL_X and 0 <= boardY < self.PIXEL_Y ):
+                    if not (0 <= boardX < self.width and 0 <= boardY < self.height ):
                         return False
                     if board[boardX][boardY] != self.BLANK:
                         return False
         return True
     
     def draw_board(self):
-        for x in range(self.PIXEL_X ):
-            for y in range(self.PIXEL_Y):
+        for x in range(self.width ):
+            for y in range(self.height):
                 pixel_color = self.COLORS[self.game_board[x][y]] if self.game_board[x][y] != self.BLANK else (0, 0, 0)
                 self.draw_pixel(x, y, pixel_color)
 
@@ -93,7 +77,7 @@ class TetrisGame:
                 if self.PIECES[piece['shape']][piece['rotation']][y][x] == 'O':
                     ledX = piece['x'] + x
                     ledY = piece['y'] + y
-                    if 0 <= ledX < self.PIXEL_X and 0 <= ledY < self.PIXEL_Y:
+                    if 0 <= ledX < self.width and 0 <= ledY < self.height:
                         self.draw_pixel(ledX, ledY, self.COLORS[piece['color']])
 
 
@@ -114,15 +98,15 @@ class TetrisGame:
 
     def remove_complete_lines(self):
         complete_lines = []
-        for y in range(self.PIXEL_Y ):
-            if all(self.game_board[x][y] is not self.BLANK for x in range(self.PIXEL_X )):
+        for y in range(self.height):
+            if all(self.game_board[x][y] is not self.BLANK for x in range(self.width)):
                 complete_lines.append(y)
 
         for y in complete_lines:
             for move_down_y in range(y, 0, -1):
-                for x in range(self.PIXEL_X ):
+                for x in range(self.width):
                     self.game_board[x][move_down_y] = self.game_board[x][move_down_y - 1]
-            for x in range(self.PIXEL_X ):
+            for x in range(self.width ):
                 self.game_board[x][0] = self.BLANK
 
     def run(self):
@@ -139,14 +123,14 @@ class TetrisGame:
                         self.game_over()
                         break
                 last_fall_time = time.time()
-            self.clear_pixels()
+            self.clear_screen()
             self.draw_board()
             self.draw_piece(current_piece)
             self.pixels.show()
-            self.handle_events(current_piece)
+            self.handle_input(current_piece)
             time.sleep(0.1)
 
-    def handle_events(self, current_piece):
+    def handle_input(self, current_piece):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -164,5 +148,5 @@ class TetrisGame:
                     self.rotate_piece(current_piece)
 
 
-# tetris_game = TetrisGame()
-# result = tetris_game.run()
+tetris_game = TetrisGame()
+result = tetris_game.run()
