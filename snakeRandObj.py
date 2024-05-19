@@ -1,141 +1,61 @@
-import pygame
 import random
 import time
-import board
-import neopixel
-from gameOverMessage import display_game_over, display_score
+from snakeLed import SnakeGame
 
-class SnakeGameWithRandomObstacles:
+class SnakeGameWithRandomObstacles(SnakeGame):
     def __init__(self):
-        self.PIXEL_X = 16
-        self.PIXEL_Y = 26
-        self.LED_BRIGHTNESS = 0.5
-        self.pixel_pin = board.D21
-        self.num_pixels = self.PIXEL_X * self.PIXEL_Y
-        self.pixels = neopixel.NeoPixel(self.pixel_pin, self.num_pixels, brightness=self.LED_BRIGHTNESS, auto_write=False, pixel_order=neopixel.GRB)
-        self.snake_coords = [{'x': self.PIXEL_X // 2, 'y': self.PIXEL_Y // 2}, {'x': self.PIXEL_X // 2, 'y': self.PIXEL_Y // 2 + 1}]
-        self.directions = ['up', 'down', 'left', 'right']
-        self.current_direction = 'up'
+        super().__init__()
         self.obstacles = self.generate_obstacles()
-        self.food = self.add_food()
-        self.score = 0
-        pygame.init()
-        pygame.joystick.init()
-        self.joystick = pygame.joystick.Joystick(0)
-        self.joystick.init()
-
-    def add_food(self):
-        while True:
-            new_food = {'x': random.randint(0, self.PIXEL_X - 1), 'y': random.randint(0, self.PIXEL_Y - 1)}
-            if new_food not in self.snake_coords and new_food not in self.obstacles:
-                return new_food
-            
-    def game_over(self):
-        display_game_over()  
-        time.sleep(2)
-        display_score(self.score)  
-        time.sleep(2)
-        self.running = False  
+ 
 
     def generate_obstacles(self):
         obstacles = []
-        for _ in range(5):
-            x = random.randint(0, self.PIXEL_X - 1)
-            y = random.randint(0, self.PIXEL_Y  - 1)
-            length = random.randint(3, 6)
-            for _ in range(length):
-                obstacles.append({'x': x, 'y': y})
-                if self.current_direction  == 'up':
-                    y = (y - 1) % self.PIXEL_Y 
-                elif self.current_direction  == 'down':
-                    y = (y + 1) % self.PIXEL_Y 
-                elif self.current_direction  == 'left':
-                    x = (x - 1) % self.PIXEL_X
-                elif self.current_direction  == 'right':
-                    x = (x + 1) % self.PIXEL_X
+        while len(obstacles) < 5:
+            x = random.randint(0, self.width - 1)
+            y = random.randint(0, self.height - 1)
+            length = random.randint(3, 7)  # Ensure the length is between 2 and 6
+            direction = random.choice(['up', 'down', 'left', 'right'])
+            temp_obstacle = []
+            valid_obstacle = True
+
+            for i in range(length):
+                new_x = x + (i if direction == 'right' else -i if direction == 'left' else 0)
+                new_y = y + (i if direction == 'down' else -i if direction == 'up' else 0)
+                new_x %= self.width
+                new_y %= self.height
+                new_pos = {'x': new_x, 'y': new_y}
+
+                # Check if the position conflicts with the snake, food, or overlaps any existing obstacles
+                if new_pos in self.snake_coords or new_pos in [o for sublist in obstacles for o in sublist] or new_pos == self.food:
+                    valid_obstacle = False
+                    break
+                temp_obstacle.append(new_pos)
+
+            if valid_obstacle:
+                obstacles.append(temp_obstacle)  # Append the whole obstacle as a sublist
+
         return obstacles
 
-    def clear_screen(self):
-        self.pixels.fill((0, 0, 0))
 
-    def draw_pixel(self, x, y, color):
-        if 0 <= x < self.PIXEL_X and 0 <= y < self.PIXEL_Y:
-            index = x * self.PIXEL_Y + y if x % 2 == 1 else x * self.PIXEL_Y + (self.PIXEL_Y - 1 - y)
-            self.pixels[index] = color
 
     def update_snake(self):
-        head_x = self.snake_coords[0]['x']
-        head_y = self.snake_coords[0]['y']
-        new_head = {'x': head_x, 'y': head_y}
-        if self.current_direction == 'up':
-            new_head['y'] = (head_y - 1) % self.PIXEL_Y
-        elif self.current_direction == 'down':
-            new_head['y'] = (head_y + 1) % self.PIXEL_Y
-        elif self.current_direction == 'left':
-            new_head['x'] = (head_x - 1) % self.PIXEL_X
-        elif self.current_direction == 'right':
-            new_head['x'] = (head_x + 1) % self.PIXEL_X
-
-        if new_head in self.snake_coords or new_head in self.obstacles:
-            return False  # Game over condition
-
-        self.snake_coords.insert(0, new_head)
-
-        if new_head == self.food:
-            self.score += 1
-            self.food = self.add_food()
-        else:
-            self.snake_coords.pop()
+        if not super().update_snake():
+            return False 
+        new_head = self.snake_coords[0]
+        if any(new_head in obstacle for obstacle in self.obstacles):
+            return False  # Game over if hits an obstacle
 
         return True
 
-    def draw_snake(self):
-        for coord in self.snake_coords:
-            self.draw_pixel(coord['x'], coord['y'], (0, 255, 0))
-
-    def draw_food(self):
-        self.draw_pixel(self.food['x'], self.food['y'], (255, 0, 0))
-
     def draw_obstacle(self):
         for obstacle in self.obstacles:
-            self.draw_pixel(obstacle['x'], obstacle['y'], (0, 0, 255))
-
-    def handle_input(self):
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-            elif event.type == pygame.JOYAXISMOTION:
-                if event.axis == 0:  # Verifică axa orizontală
-                    if event.value < -0.5:
-                        if self.current_direction != 'right':  # Previne mersul înapoi direct
-                            self.current_direction = 'left'
-                    elif event.value > 0.5:
-                        if self.current_direction != 'left':
-                            self.current_direction = 'right'
-                elif event.axis == 1:  # Verifică axa verticală
-                    if event.value < -0.5:
-                        if self.current_direction != 'down':
-                            self.current_direction = 'up'
-                    elif event.value > 0.5:
-                        if self.current_direction != 'up':
-                            self.current_direction = 'down'
+            for coord in obstacle:
+                self.draw_pixel(coord['x'], coord['y'], (0, 0, 255))
 
 
-    def run(self):
-        self.running = True
-        while self.running:
-            self.handle_input()
-            self.clear_screen()
-            if not self.update_snake():  # Update game logic and check for game over
-                self.game_over()
-                break
-            self.draw_snake()
-            self.draw_food()
-            self.draw_obstacle()  # Draw all game elements
-            self.pixels.show()  # Update the display with the new pixel states
-            time.sleep(0.1)  # Control the game speed
+    def draw_elements(self):
+        super().draw_elements() 
+        self.draw_obstacle()  
 
-
-
-# snake_game = SnakeGame()
-# result = snake_game.run() 
+snake_game = SnakeGameWithRandomObstacles()
+result = snake_game.run() 
