@@ -4,7 +4,7 @@ import neopixel
 import pygame
 from pygame.locals import *
 from abc import ABC, abstractmethod
-from gameOverMessage import display_game_over
+from gameOverMessage import LEDDisplay
 
 class BaseGame:
     def __init__ (self):
@@ -33,7 +33,8 @@ class BaseGame:
                 self.pixels[index] = color
     
     def game_over(self):
-        display_game_over() 
+        led_display = LEDDisplay()
+        led_display.display_game_over()
         time.sleep(2)
 
     def update_display(self):

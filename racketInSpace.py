@@ -1,7 +1,7 @@
 import pygame
 import random
 import time
-from gameOverMessage import display_score
+from gameOverMessage import LEDDisplay
 from base_game import BaseGame
 
 class RacketGame(BaseGame):
@@ -49,7 +49,8 @@ class RacketGame(BaseGame):
 
     def game_over(self):
         super().game_over() 
-        display_score(self.hits)  
+        led_display_score = LEDDisplay()
+        led_display_score.display_score(self.hits)  
         time.sleep(2)
         self.running = False
 

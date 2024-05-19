@@ -2,7 +2,7 @@ import random
 import time
 import pygame
 from base_game import BaseGame
-from gameOverMessage import display_score
+from gameOverMessage import LEDDisplay
 
 class SnakeGame(BaseGame):
     def __init__(self): 
@@ -79,7 +79,8 @@ class SnakeGame(BaseGame):
 
     def game_over(self):
         super().game_over() #folosesc implementarea initiala din clasa de baza
-        display_score(self.score)  # Afișează scorul
+        led_display_score = LEDDisplay()
+        led_display_score.display_score(self.score)
         time.sleep(2)
         self.running = False  # Oprirea jocului
 
