@@ -2,6 +2,7 @@ import pygame
 import time
 import neopixel
 import board
+import signal
 from snakeLed import SnakeGame
 from tetrisLed import TetrisGame
 from racketInSpace import RacketGame
@@ -58,6 +59,10 @@ class Menu:
         pygame.joystick.init()
         self.joystick = pygame.joystick.Joystick(0)
         self.joystick.init()
+
+    def signal_handler(self, sig, frame):
+        print(f'Signal {sig} received, stopping...')
+        self.running = False
 
     def clear_screen(self):
         self.pixels.fill((0, 0, 0))
@@ -153,7 +158,7 @@ class Menu:
             time.sleep(0.3)
         if self.joystick.get_button(0):  # Button 0 for selection
             self.run_game(self.options[self.selected_option])
-            time.sleep(0.3)
+
 
     def run_game(self, game_choice):
         print(f"Starting {game_choice}...")
