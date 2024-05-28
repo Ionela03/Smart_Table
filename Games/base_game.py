@@ -62,3 +62,6 @@ class BaseGame:
     @abstractmethod
     def process_button_down(self, event):
         pass
+
+    def stop(self):
+        self.running = False

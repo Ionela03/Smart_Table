@@ -99,8 +99,11 @@ class SnakeGame(BaseGame):
             self.draw_elements()
             self.update_display()
             time.sleep(0.1)
+        print("SnakeGame has stopped")
 
     
 
-snake_game = SnakeGame()
-result = snake_game.run()  
+    
+
+# snake_game = SnakeGame()
+# result = snake_game.run()  

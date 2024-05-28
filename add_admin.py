@@ -1,9 +1,11 @@
-from app import db, app
+from app import create_app, db
 from app.models import Admin
 from werkzeug.security import generate_password_hash
 
+app = create_app()  # Creează o instanță a aplicației folosind funcția din __init__.py
+
 def add_admin(username, password):
-    with app.app_context():  # Adaugă această linie pentru a crea un context al aplicației
+    with app.app_context():  # Asigură-te că folosești contextul aplicației Flask
         # Crează un hash pentru parolă
         password_hash = generate_password_hash(password)
         

@@ -2,60 +2,48 @@ import random
 import time
 from snakeLed import SnakeGame
 
-class SnakeGameWithRandomObstacles(SnakeGame):
+class SnakeGameWithBorder(SnakeGame):
     def __init__(self):
         super().__init__()
-        self.obstacles = self.generate_obstacles()
- 
 
-    def generate_obstacles(self):
-        obstacles = []
-        while len(obstacles) < 5:
-            x = random.randint(0, self.width - 1)
-            y = random.randint(0, self.height - 1)
-            length = random.randint(3, 7)  # Ensure the length is between 3 and 7
-            direction = random.choice(['up', 'down', 'left', 'right'])
-            temp_obstacle = []
-            valid_obstacle = True
+    def draw_border(self):
+        violet = (148, 0, 211)
+        for x in range(self.width):
+            self.draw_pixel(x, 0, violet)
+            self.draw_pixel(x, self.height - 1, violet)
 
-            for i in range(length):
-                new_x = x + (i if direction == 'right' else -i if direction == 'left' else 0)
-                new_y = y + (i if direction == 'down' else -i if direction == 'up' else 0)
-                new_x %= self.width
-                new_y %= self.height
-                new_pos = {'x': new_x, 'y': new_y}
+        for y in range(self.height):
+            self.draw_pixel(0, y, violet)
+            self.draw_pixel(self.width - 1, y, violet)
 
-                # Check if the position conflicts with the snake, food, or overlaps any existing obstacles
-                if new_pos in self.snake_coords or new_pos in [o for sublist in obstacles for o in sublist] or new_pos == self.food:
-                    valid_obstacle = False
-                    break
-                temp_obstacle.append(new_pos)
+        self.pixels.show()
 
-            if valid_obstacle:
-                obstacles.append(temp_obstacle)  # Append the whole obstacle as a sublist
+    def place_food(self):
+        while True:
+            self.food = {'x': random.randint(1, self.width - 2), 'y': random.randint(1, self.height - 2)}
+            if self.food not in self.snake_coords and not self.is_food_on_border():
+                break
 
-        return obstacles
-
-
+    def is_food_on_border(self):
+        # Check if the food is on the border
+        if self.food['x'] == 0 or self.food['x'] == self.width - 1 or self.food['y'] == 0 or self.food['y'] == self.height - 1:
+            return True
+        return False
 
     def update_snake(self):
         if not super().update_snake():
-            return False 
+            return False
         new_head = self.snake_coords[0]
-        if any(new_head in obstacle for obstacle in self.obstacles):
-            return False  # Game over if hits an obstacle
+        
+        # Check if the snake hits the border
+        if new_head['x'] == 0 or new_head['x'] == self.width - 1 or new_head['y'] == 0 or new_head['y'] == self.height - 1:
+            return False  # Game over if hits the border
 
         return True
 
-    def draw_obstacle(self):
-        for obstacle in self.obstacles:
-            for coord in obstacle:
-                self.draw_pixel(coord['x'], coord['y'], (0, 0, 255))
-
-
     def draw_elements(self):
-        super().draw_elements() 
-        self.draw_obstacle()  
+        super().draw_elements()
+        self.draw_border()
 
-# snake_game = SnakeGameWithRandomObstacles()
-# result = snake_game.run() 
+# snake_game = SnakeGameWithBorder()
+# result = snake_game.run()
