@@ -1,6 +1,6 @@
 import random
 import time
-from snakeLed import SnakeGame
+from classic_snake import SnakeGame
 
 class SnakeGameWithBorder(SnakeGame):
     def __init__(self):
@@ -18,17 +18,15 @@ class SnakeGameWithBorder(SnakeGame):
 
         self.pixels.show()
 
-    def place_food(self):
+    def add_food(self):
         while True:
             self.food = {'x': random.randint(1, self.width - 2), 'y': random.randint(1, self.height - 2)}
             if self.food not in self.snake_coords and not self.is_food_on_border():
-                break
+                return self.food
 
     def is_food_on_border(self):
         # Check if the food is on the border
-        if self.food['x'] == 0 or self.food['x'] == self.width - 1 or self.food['y'] == 0 or self.food['y'] == self.height - 1:
-            return True
-        return False
+        return self.food['x'] == 0 or self.food['x'] == self.width - 1 or self.food['y'] == 0 or self.food['y'] == self.height - 1
 
     def update_snake(self):
         if not super().update_snake():

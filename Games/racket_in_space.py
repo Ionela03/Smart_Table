@@ -4,7 +4,7 @@ import time
 from gameOverMessage import LEDDisplay
 from base_game import BaseGame
 
-class RacketGame(BaseGame):
+class RacketInSpace(BaseGame):
     def __init__(self):
         super().__init__()
         self.ship = {'x': self.width // 2 - 1, 'width': 3, 'y': self.height - 2}
