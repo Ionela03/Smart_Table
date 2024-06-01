@@ -18,11 +18,11 @@ def set_runtime():
     if run_time is None:
         return jsonify({'message': 'Missing run_time argument'}), 400
     
-    # Obține calea către directorul curent al scriptului
+    # Obtine calea catre directorul curent al script-ului
     current_dir = os.path.dirname(os.path.abspath(__file__))
     runtime_path = os.path.join(current_dir, 'runtime.json')
     
-    # Scrie run_time într-un fișier
+    # Scrie run_time intr-un fisier
     with open(runtime_path, 'w') as f:
         json.dump({'run_time': run_time}, f)
     
@@ -36,18 +36,22 @@ def verify_password(username, password):
         return user
     return None
 
-@main_bp.route('/admin/delete/<string:username>', methods=['DELETE'])
-def delete_admin(username):
-    current_app.logger.debug(f"Attempting to delete admin: {username}")
-    admin_to_delete = Admin.query.filter_by(username=username).first()
+@main_bp.route('/admin/delete/<int:user_id>', methods=['DELETE'])
+def delete_admin(user_id):
+    if not user_id:
+        current_app.logger.error("Attempted to delete an admin without providing a valid user ID.")
+        return jsonify({'error': 'A valid user ID is required for deletion'}), 400
+
+    current_app.logger.debug(f"Attempting to delete admin with ID: {user_id}")
+    admin_to_delete = Admin.query.get(user_id)
     if admin_to_delete is None:
-        current_app.logger.error(f"Admin not found: {username}")
+        current_app.logger.error(f"Admin not found with ID: {user_id}")
         return jsonify({'error': 'Admin not found'}), 404
 
     db.session.delete(admin_to_delete)
     db.session.commit()
-    current_app.logger.debug(f"Admin deleted: {username}")
-    return jsonify({'success': 'Admin deleted'}), 200
+    current_app.logger.debug(f"Admin deleted with ID: {user_id}")
+    return jsonify({'success': 'Admin deleted successfully'}), 200
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -83,7 +87,8 @@ def update_credentials():
 @get_bp.route('/admins', methods=['GET'])
 def get_admins():
     admins = Admin.query.all()
-    return jsonify([admin.username for admin in admins])
+    # Return a list of dictionaries each containing username and ID
+    return jsonify([{'username': admin.username, 'id': admin.id} for admin in admins])
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -102,20 +107,26 @@ def login():
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
-    data = request.get_json()
-    username = data['username']
-    password = data['password']
+    data = request.get_json(force=True) 
+    
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or username.strip() == '':
+        return jsonify({'message': 'Username is required and cannot be empty'}), 400
+    if not password or password.strip() == '':
+        return jsonify({'message': 'Password is required and cannot be empty'}), 400
 
-    if username is None or password is None:
-        return jsonify({'message': 'Missing arguments'}), 400
-    if Admin.query.filter_by(username=username).first() is not None:
-        return jsonify({'message': 'User already exists'}), 400
+    if Admin.query.filter_by(username=username).first():
+        return jsonify({'message': 'User already exists'}), 409
 
-    user = Admin(username=username)
-    user.set_password(password)
-    db.session.add(user)
+    new_user = Admin(username=username)
+    new_user.set_password(password)  # Use the set_password method to hash the password
+    db.session.add(new_user)
     db.session.commit()
-    return jsonify({'message': 'User registered'}), 201
+
+    return jsonify({'message': 'User registered successfully'}), 201
+
 
 @main_bp.route('/')
 def index():
