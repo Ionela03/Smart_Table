@@ -1,6 +1,5 @@
 import random
 import time
-import pygame
 from base_game import BaseGame
 from gameOverMessage import LEDDisplay
 
@@ -76,13 +75,6 @@ class SnakeGame(BaseGame):
 
     def draw_food(self):
         self.draw_pixel(self.food['x'], self.food['y'], (255, 0, 0))
-
-    def game_over(self):
-        super().game_over() #folosesc implementarea initiala din clasa de baza
-        led_display_score = LEDDisplay()
-        led_display_score.display_score(self.score)
-        time.sleep(2)
-        self.running = False  # Oprirea jocului
 
     def draw_elements(self):
         self.draw_snake()

@@ -47,12 +47,6 @@ class RacketInSpace(BaseGame):
                 new_bullets.append(bullet)
         self.bullets = new_bullets
 
-    def game_over(self):
-        super().game_over() 
-        led_display_score = LEDDisplay()
-        led_display_score.display_score(self.hits)  
-        time.sleep(2)
-        self.running = False
 
     def check_collisions(self):
         remaining_objects = []
