@@ -10,7 +10,7 @@ class SnakeGame(BaseGame):
         self.current_direction = 'up'
         self.snake_coords = [{'x': self.width // 2, 'y': self.height // 2}, {'x': self.width // 2, 'y': self.height// 2 + 1}]
         self.food = self.add_food()
-        self.score = 0
+        self.score=0
 
     def draw_pixel(self, x, y, color):
         if 0 <= x <  self.width and 0 <= y < self.height:
