@@ -22,6 +22,7 @@ class TetrisGame(BaseGame):
         self.game_board = [[None for _ in range(self.height)] for _ in range(self.width)]
         self.BLANK = None
         self.current_piece=None
+        self.score = 0
 
     def get_new_piece(self):
         shape = random.choice(list(self.PIECES.keys()))
@@ -99,6 +100,8 @@ class TetrisGame(BaseGame):
             for x in range(self.width ):
                 self.game_board[x][0] = self.BLANK
 
+        return len(complete_lines)  
+
     def handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -125,7 +128,7 @@ class TetrisGame(BaseGame):
             return
         if event.button == 4:
             self.rotate_piece(self.current_piece)
-
+            
     def run(self):
         self.running = True
         self.current_piece = self.get_new_piece()
@@ -134,7 +137,8 @@ class TetrisGame(BaseGame):
             if time.time() - last_fall_time > 1:
                 if not self.move_piece(self.current_piece, adjY=1):
                     self.add_to_board(self.game_board, self.current_piece)
-                    self.remove_complete_lines()
+                    lines_cleared = self.remove_complete_lines()
+                    self.score += lines_cleared  
                     self.current_piece = self.get_new_piece()
                     if self.current_piece is None:
                         self.game_over()
@@ -146,8 +150,6 @@ class TetrisGame(BaseGame):
             self.pixels.show()
             self.handle_input()
             time.sleep(0.1)
-
-
 
 # tetris_game = TetrisGame()
 # result = tetris_game.run()

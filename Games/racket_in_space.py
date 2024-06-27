@@ -10,7 +10,7 @@ class RacketInSpace(BaseGame):
         self.ship = {'x': self.width // 2 - 1, 'width': 3, 'y': self.height - 2}
         self.objects = []
         self.bullets = []
-        self.hits = 0
+        self.score=0
 
     def draw_ship(self):
         for x in range(self.ship['x'], self.ship['x'] + self.ship['width']):
@@ -47,12 +47,6 @@ class RacketInSpace(BaseGame):
                 new_bullets.append(bullet)
         self.bullets = new_bullets
 
-    def game_over(self):
-        super().game_over() 
-        led_display_score = LEDDisplay()
-        led_display_score.display_score(self.hits)  
-        time.sleep(2)
-        self.running = False
 
     def check_collisions(self):
         remaining_objects = []
@@ -66,12 +60,12 @@ class RacketInSpace(BaseGame):
                     self.draw_pixel(obj[0], obj[1], (0, 0, 0))
                     self.bullets.remove(bullet)
                     hit = True
-                    self.hits += 1
+                    self.score += 1
                     break
             if not hit:
                 remaining_objects.append(obj)
         self.objects = remaining_objects
-        if self.hits >= 5 and self.ship['width'] == 3:
+        if self.score >= 5 and self.ship['width'] == 3:
             self.ship['width'] = 5
         return True
 

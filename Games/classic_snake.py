@@ -1,6 +1,5 @@
 import random
 import time
-import pygame
 from base_game import BaseGame
 from gameOverMessage import LEDDisplay
 
@@ -11,7 +10,7 @@ class SnakeGame(BaseGame):
         self.current_direction = 'up'
         self.snake_coords = [{'x': self.width // 2, 'y': self.height // 2}, {'x': self.width // 2, 'y': self.height// 2 + 1}]
         self.food = self.add_food()
-        self.score = 0
+        self.score=0
 
     def draw_pixel(self, x, y, color):
         if 0 <= x <  self.width and 0 <= y < self.height:
@@ -76,13 +75,6 @@ class SnakeGame(BaseGame):
 
     def draw_food(self):
         self.draw_pixel(self.food['x'], self.food['y'], (255, 0, 0))
-
-    def game_over(self):
-        super().game_over() #folosesc implementarea initiala din clasa de baza
-        led_display_score = LEDDisplay()
-        led_display_score.display_score(self.score)
-        time.sleep(2)
-        self.running = False  # Oprirea jocului
 
     def draw_elements(self):
         self.draw_snake()

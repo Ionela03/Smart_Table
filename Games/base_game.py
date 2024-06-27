@@ -18,6 +18,8 @@ class BaseGame:
         pygame.joystick.init()
         self.joystick = pygame.joystick.Joystick(0)
         self.joystick.init()
+        self.score=0
+        
 
     def clear_screen(self):
         self.pixels.fill((0, 0, 0))
@@ -36,6 +38,9 @@ class BaseGame:
         led_display = LEDDisplay()
         led_display.display_game_over()
         time.sleep(2)
+        led_display.display_score(self.score)
+        time.sleep(2)
+        self.running = False  
 
     def update_display(self):
         self.pixels.show()
